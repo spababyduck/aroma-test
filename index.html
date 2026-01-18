@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SPA BABYDUCK | 오늘의 3종 아로마 블렌딩</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: "Noto Sans KR", sans-serif;
+      background: #f7f3ee;
+      color: #222;
+    }
+    .wrap {
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+    h1 {
+      font-size: 22px;
+      line-height: 1.3;
+      margin-bottom: 8px;
+    }
+    .sub {
+      font-size: 13px;
+      color: #666;
+      margin-bottom: 20px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.08);
+    }
+    .step { display: none; }
+    .step.active { display: block; }
+    .btn {
+      margin-top: 20px;
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 12px;
+      background: #c9a24d;
+      color: #fff;
+      font-size: 15px;
+      cursor: pointer;
+    }
+    .option {
+      display: block;
+      padding: 12px;
+      margin-bottom: 8px;
+      border-radius: 10px;
+      border: 1px solid #ddd;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .option input { margin-right: 8px; }
+  </style>
+</head>
+<body>
+
+<div class="wrap">
+  <h1>오늘의 컨디션 기반<br>3종 아로마 블렌딩 테스트</h1>
+  <div class="sub">
+    지금의 몸 상태와 향 취향을 바탕으로<br>
+    SPA BABYDUCK 맞춤 블렌딩을 추천합니다.
+  </div>
+
+  <div class="card">
+    <div class="step active" id="step1">
+      <p><b>STEP 1. 오늘의 컨디션을 골라주세요</b></p>
+      <label class="option"><input type="checkbox"> 근육통이 있다</label>
+      <label class="option"><input type="checkbox"> 몸이 잘 붓는다</label>
+      <label class="option"><input type="checkbox"> 스트레스가 높다</label>
+      <label class="option"><input type="checkbox"> 잠을 깊게 못 잔다</label>
+      <button class="btn" onclick="nextStep(1)">다음</button>
+    </div>
+
+    <div class="step" id="step2">
+      <p><b>STEP 2. 향 취향을 골라주세요</b></p>
+      <label class="option"><input type="checkbox"> Floral</label>
+      <label class="option"><input type="checkbox"> Citrus</label>
+      <label class="option"><input type="checkbox"> Woody</label>
+      <label class="option"><input type="checkbox"> Herbal</label>
+      <button class="btn" onclick="nextStep(2)">결과 보기</button>
+    </div>
+
+    <div class="step" id="step3">
+      <p><b>오늘의 추천 블렌딩</b></p>
+      <p>
+        🌿 라반딘<br>
+        🌿 사이프레스<br>
+        🌿 네롤리
+      </p>
+      <p style="font-size:13px;color:#666;">
+        오늘의 컨디션에 맞춰<br>
+        이완 · 순환 · 안정 중심으로 추천되었습니다.
+      </p>
+      <button class="btn" onclick="location.reload()">다시하기</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function nextStep(n) {
+  document.getElementById("step" + n).classList.remove("active");
+  document.getElementById("step" + (n + 1)).classList.add("active");
+}
+</script>
+
+</body>
+</html>
