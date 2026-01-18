@@ -2,111 +2,560 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>SPA BABYDUCK | 오늘의 3종 아로마 블렌딩</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SPA BABYDUCK | 오늘의 3종 맞춤 블렌딩</title>
   <style>
-    body {
-      margin: 0;
-      font-family: "Noto Sans KR", sans-serif;
-      background: #f7f3ee;
-      color: #222;
+    :root{
+      --bg:#f7f3ee; --card:#fff; --ink:#1c1c1c; --muted:#6b6b6b;
+      --line:#e7e2da; --gold:#c9a24d; --soft:#fbf8f2; --soft2:#fffdf8;
     }
-    .wrap {
-      max-width: 520px;
-      margin: 0 auto;
-      padding: 24px;
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--ink);
+      font-family:system-ui,-apple-system,"Noto Sans KR","Apple SD Gothic Neo",Segoe UI,Roboto,sans-serif;}
+    .app{max-width:540px;margin:24px auto;padding:0 14px 24px;}
+    .top{display:flex;gap:14px;align-items:flex-end;justify-content:space-between;margin-bottom:14px;}
+    .badge{display:inline-block;font-size:12px;padding:6px 10px;border:1px solid var(--line);
+      border-radius:999px;background:var(--soft);color:var(--muted);margin-bottom:10px;}
+    h1{margin:0;line-height:1.18;font-size:22px}
+    .accent{color:var(--gold)}
+    .sub{margin:10px 0 0;color:var(--muted);font-size:13px;line-height:1.5}
+    .progress{width:170px;text-align:right}
+    .bar{height:10px;border:1px solid var(--line);background:var(--soft);border-radius:999px;overflow:hidden}
+    .fill{height:100%;width:0%;background:var(--gold);transition:width .2s ease}
+    .steptext{margin-top:6px;font-size:12px;color:var(--muted)}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:18px;
+      padding:18px;box-shadow:0 12px 30px rgba(0,0,0,.06);min-height:560px;}
+    h2{margin:0 0 6px;font-size:18px}
+    .hint{margin:0 0 14px;color:var(--muted);font-size:13px;line-height:1.45}
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .chk{display:flex;gap:10px;align-items:flex-start;padding:12px;border:1px solid var(--line);
+      border-radius:12px;background:var(--soft2);cursor:pointer;font-size:13px;line-height:1.35}
+    .chk:hover{border-color:#d9cfbf}
+    .chk input{margin-top:2px}
+    .note{margin-top:14px;padding:12px;border:1px dashed var(--line);border-radius:12px;background:#fff}
+    textarea{width:100%;margin-top:8px;min-height:84px;resize:vertical;border:1px solid var(--line);
+      border-radius:10px;padding:10px;font-size:13px;outline:none}
+    .tiny{font-size:12px}
+    .muted{color:var(--muted)}
+    .chips{margin-top:8px;display:flex;flex-wrap:wrap;gap:8px}
+    .chip{border:1px solid var(--line);background:var(--soft);padding:8px 10px;border-radius:999px;
+      font-size:12px;cursor:pointer;user-select:none}
+    .chip.active{border-color:var(--gold);background:#f3e6c8}
+    .disclaimer{margin-top:12px;padding:12px;border-radius:12px;border:1px solid rgba(184,66,66,.25);
+      background:rgba(184,66,66,.05);color:#6f1f1f;font-size:12px;line-height:1.45}
+    .rangeRow{display:flex;align-items:center;gap:10px;margin-top:8px}
+    .rangeRow input[type="range"]{flex:1}
+    .step{display:none}
+    .step.active{display:block}
+    .nav{display:flex;gap:10px;margin-top:12px}
+    .btn{flex:1;border:none;border-radius:14px;padding:12px 14px;font-size:14px;cursor:pointer;
+      background:var(--gold);color:#fff}
+    .btn:disabled{opacity:.55;cursor:not-allowed}
+    .btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--line)}
+    .resultBox{margin-top:10px;padding:14px;border-radius:14px;border:1px solid var(--line);background:var(--soft)}
+    .resultTop{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap}
+    .pill{display:inline-block;padding:6px 10px;border-radius:999px;border:1px solid var(--line);
+      background:#fff;font-size:12px;color:var(--muted)}
+    .recipe{margin-top:12px;padding:12px;border-radius:12px;background:#fff;border:1px solid var(--line)}
+    .recipe h3{margin:0 0 8px;font-size:15px}
+    .ol{margin:0;padding-left:16px;font-size:13px;line-height:1.6}
+    .reason{margin-top:12px;font-size:13px;line-height:1.55}
+    .actions{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
+    .smallGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+    .kv{padding:10px;border-radius:12px;border:1px solid var(--line);background:#fff;font-size:12px;line-height:1.45}
+    .kv b{display:block;margin-bottom:4px}
+    .toast{display:none;margin-top:10px;padding:10px 12px;border-radius:12px;border:1px solid #d8ccb5;background:#fffdf3;font-size:12px;color:#5c4a22}
+    .toast.show{display:block}
+    @media (max-width:420px){
+      .grid2{grid-template-columns:1fr}
+      .top{flex-direction:column;align-items:flex-start}
+      .progress{width:100%;text-align:left}
+      .smallGrid{grid-template-columns:1fr}
     }
-    h1 {
-      font-size: 22px;
-      line-height: 1.3;
-      margin-bottom: 8px;
-    }
-    .sub {
-      font-size: 13px;
-      color: #666;
-      margin-bottom: 20px;
-    }
-    .card {
-      background: #fff;
-      border-radius: 16px;
-      padding: 20px;
-      box-shadow: 0 10px 30px rgba(0,0,0,.08);
-    }
-    .step { display: none; }
-    .step.active { display: block; }
-    .btn {
-      margin-top: 20px;
-      width: 100%;
-      padding: 14px;
-      border: none;
-      border-radius: 12px;
-      background: #c9a24d;
-      color: #fff;
-      font-size: 15px;
-      cursor: pointer;
-    }
-    .option {
-      display: block;
-      padding: 12px;
-      margin-bottom: 8px;
-      border-radius: 10px;
-      border: 1px solid #ddd;
-      cursor: pointer;
-      font-size: 14px;
-    }
-    .option input { margin-right: 8px; }
   </style>
 </head>
 <body>
-
-<div class="wrap">
-  <h1>오늘의 컨디션 기반<br>3종 아로마 블렌딩 테스트</h1>
-  <div class="sub">
-    지금의 몸 상태와 향 취향을 바탕으로<br>
-    SPA BABYDUCK 맞춤 블렌딩을 추천합니다.
-  </div>
-
-  <div class="card">
-    <div class="step active" id="step1">
-      <p><b>STEP 1. 오늘의 컨디션을 골라주세요</b></p>
-      <label class="option"><input type="checkbox"> 근육통이 있다</label>
-      <label class="option"><input type="checkbox"> 몸이 잘 붓는다</label>
-      <label class="option"><input type="checkbox"> 스트레스가 높다</label>
-      <label class="option"><input type="checkbox"> 잠을 깊게 못 잔다</label>
-      <button class="btn" onclick="nextStep(1)">다음</button>
-    </div>
-
-    <div class="step" id="step2">
-      <p><b>STEP 2. 향 취향을 골라주세요</b></p>
-      <label class="option"><input type="checkbox"> Floral</label>
-      <label class="option"><input type="checkbox"> Citrus</label>
-      <label class="option"><input type="checkbox"> Woody</label>
-      <label class="option"><input type="checkbox"> Herbal</label>
-      <button class="btn" onclick="nextStep(2)">결과 보기</button>
-    </div>
-
-    <div class="step" id="step3">
-      <p><b>오늘의 추천 블렌딩</b></p>
-      <p>
-        🌿 라반딘<br>
-        🌿 사이프레스<br>
-        🌿 네롤리
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <div class="badge">SPA BABYDUCK</div>
+      <h1>오늘의 컨디션 기반<br><span class="accent">3종 맞춤 블렌딩 추천</span></h1>
+      <p class="sub">
+        간단 체크 후, 매장 보유 33종 오일 중 <b>오늘의 컨디션</b>·<b>특이사항</b>·<b>향 취향</b>을 반영해
+        <b>최적 3종 블렌딩</b>을 안내해드려요.
       </p>
-      <p style="font-size:13px;color:#666;">
-        오늘의 컨디션에 맞춰<br>
-        이완 · 순환 · 안정 중심으로 추천되었습니다.
-      </p>
-      <button class="btn" onclick="location.reload()">다시하기</button>
     </div>
-  </div>
+    <div class="progress">
+      <div class="bar"><div class="fill" id="fill"></div></div>
+      <div class="steptext" id="stepText">STEP 1 / 5</div>
+    </div>
+  </header>
+
+  <main class="card">
+    <section class="step active" data-step="1">
+      <h2>STEP 1. 오늘 컨디션 체크</h2>
+      <p class="hint">해당되는 항목을 선택해 주세요. (최대 6개)</p>
+      <div class="grid2">
+        <label class="chk"><input type="checkbox" value="muscle_pain"> 근육통/뻐근함이 있다</label>
+        <label class="chk"><input type="checkbox" value="swelling"> 몸이 잘 붓는다(부종)</label>
+        <label class="chk"><input type="checkbox" value="cellulite"> 셀룰라이트가 고민이다</label>
+        <label class="chk"><input type="checkbox" value="diet"> 다이어트/대사 관리 중이다</label>
+        <label class="chk"><input type="checkbox" value="stress"> 스트레스/긴장감이 높다</label>
+        <label class="chk"><input type="checkbox" value="sleep"> 잠이 얕거나 숙면이 어렵다</label>
+        <label class="chk"><input type="checkbox" value="skin_trouble"> 트러블/항염 케어가 필요하다</label>
+        <label class="chk"><input type="checkbox" value="respiration"> 코/호흡이 답답해 개운함이 필요하다</label>
+      </div>
+      <div class="note">
+        <strong>메모(선택)</strong>
+        <div class="tiny muted" style="margin-top:6px;">예: 오른쪽 어깨/승모근, 허리, 종아리 등 구체적으로 적어주시면 추천 정확도가 올라가요.</div>
+        <textarea id="memo" placeholder="예: 오른쪽 어깨 뭉침 심함 / 향은 가벼운 계열 선호"></textarea>
+      </div>
+    </section>
+
+    <section class="step" data-step="2">
+      <h2>STEP 2. 특이사항 확인</h2>
+      <p class="hint">안전한 블렌딩을 위해 체크해 주세요. 해당 시 일부 오일은 자동 제외/후순위 처리됩니다.</p>
+      <div class="grid2">
+        <label class="chk"><input type="checkbox" id="pregnant"> 임신 중이거나 임신 가능성이 있다</label>
+        <label class="chk"><input type="checkbox" id="verySensitive"> 피부가 매우 민감한 편이다</label>
+        <label class="chk"><input type="checkbox" id="headacheStrong"> 진한 향에서 두통/메스꺼움이 있다</label>
+        <label class="chk"><input type="checkbox" id="asthmaLike"> 호흡기가 예민한 편이다(기관지/천식 등)</label>
+      </div>
+      <div class="note">
+        <strong>알러지/기피 오일(선택)</strong>
+        <p class="tiny muted">특정 오일에 예민하신 경우 선택해 주세요. (복수 선택 가능)</p>
+        <div class="chips" id="oilExcludeChips"></div>
+      </div>
+      <div class="disclaimer">
+        <strong>안전 안내</strong><br>
+        본 결과는 웰니스 목적의 향 추천입니다. 피부 반응(따가움/홍조 등)이 있으면 즉시 중단하고,
+        임신/질환/약물 복용 중이면 전문가 상담이 필요합니다.
+      </div>
+    </section>
+
+    <section class="step" data-step="3">
+      <h2>STEP 3. 좋아하는 향 계열</h2>
+      <p class="hint">선호 계열은 추천에 반영됩니다. (최대 2개)</p>
+      <div class="grid2">
+        <label class="chk"><input type="checkbox" class="prefCat" value="Floral"> Floral (플로럴)</label>
+        <label class="chk"><input type="checkbox" class="prefCat" value="Citrus"> Citrus (시트러스)</label>
+        <label class="chk"><input type="checkbox" class="prefCat" value="Minty"> Minty (민티)</label>
+        <label class="chk"><input type="checkbox" class="prefCat" value="Herbal"> Herbal (허브)</label>
+        <label class="chk"><input type="checkbox" class="prefCat" value="Woody"> Woody (우디)</label>
+        <label class="chk"><input type="checkbox" class="prefCat" value="Spicy"> Spicy (스파이시)</label>
+      </div>
+    </section>
+
+    <section class="step" data-step="4">
+      <h2>STEP 4. 싫어하는 향 계열</h2>
+      <p class="hint">비선호 계열은 후순위 또는 제외될 수 있어요. (최대 2개)</p>
+      <div class="grid2">
+        <label class="chk"><input type="checkbox" class="hateCat" value="Floral"> Floral (플로럴)</label>
+        <label class="chk"><input type="checkbox" class="hateCat" value="Citrus"> Citrus (시트러스)</label>
+        <label class="chk"><input type="checkbox" class="hateCat" value="Minty"> Minty (민티)</label>
+        <label class="chk"><input type="checkbox" class="hateCat" value="Herbal"> Herbal (허브)</label>
+        <label class="chk"><input type="checkbox" class="hateCat" value="Woody"> Woody (우디)</label>
+        <label class="chk"><input type="checkbox" class="hateCat" value="Spicy"> Spicy (스파이시)</label>
+      </div>
+      <div class="note">
+        <strong>향의 무게감(선택)</strong>
+        <div class="tiny muted" style="margin-top:6px;">가볍고 산뜻한 향 ↔ 묵직하고 안정적인 향</div>
+        <div class="rangeRow">
+          <span class="tiny muted">가벼움</span>
+          <input type="range" id="intensity" min="1" max="5" value="3">
+          <span class="tiny muted">묵직함</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="step" data-step="5">
+      <h2>결과: 오늘의 3종 블렌딩</h2>
+      <div id="resultBox" class="resultBox"></div>
+
+      <div class="actions">
+        <button class="btn" id="copyBtn">결과 복사</button>
+        <button class="btn ghost" id="resetBtn">다시하기</button>
+      </div>
+
+      <div id="toast" class="toast">복사 완료. 메시지/메모에 붙여넣기 해주세요.</div>
+
+      <div class="tiny muted" style="margin-top:10px;line-height:1.45">
+        * 권장 비율(총 5방울 기준): <strong>기능 1(2방울) + 기능 2(2방울) + 베이스(1방울)</strong><br>
+        * 실제 사용은 피부 컨디션에 따라 테라피스트 안내에 따라 조절될 수 있어요.
+      </div>
+    </section>
+  </main>
+
+  <footer class="nav">
+    <button class="btn ghost" id="backBtn" disabled>이전</button>
+    <button class="btn" id="nextBtn">다음</button>
+  </footer>
 </div>
 
 <script>
-function nextStep(n) {
-  document.getElementById("step" + n).classList.remove("active");
-  document.getElementById("step" + (n + 1)).classList.add("active");
-}
-</script>
+(() => {
+  // 고객용 라벨
+  const TAG_LABEL = {
+    muscle_pain:"근육 뭉침/피로",
+    swelling:"부종/순환",
+    cellulite:"셀룰라이트/드레나지",
+    diet:"대사/바디라인",
+    stress:"스트레스/긴장",
+    sleep:"수면/안정",
+    skin_trouble:"트러블/항염",
+    respiration:"호흡/개운함",
+    grounding:"안정감",
+    mood:"기분 전환",
+    immune:"정화/컨디션",
+    focus:"집중/리프레시"
+  };
 
+  // 33종
+  const OILS = [
+    // Floral 8
+    {name:"네롤리",cat:"Floral",tags:["stress","sleep","mood","grounding"],avoidPreg:false,irritant:false,strong:false},
+    {name:"제라늄",cat:"Floral",tags:["stress","mood","swelling","skin_trouble"],avoidPreg:false,irritant:false,strong:false},
+    {name:"클라리세이지",cat:"Floral",tags:["stress","sleep","mood","muscle_pain"],avoidPreg:true,irritant:false,strong:false},
+    {name:"로즈제라늄",cat:"Floral",tags:["stress","mood","skin_trouble","swelling"],avoidPreg:false,irritant:false,strong:false},
+    {name:"일랑일랑",cat:"Floral",tags:["stress","sleep","mood","grounding"],avoidPreg:false,irritant:false,strong:true},
+    {name:"페티그레인",cat:"Floral",tags:["stress","sleep","mood","focus"],avoidPreg:false,irritant:false,strong:false},
+    {name:"팔마로사",cat:"Floral",tags:["skin_trouble","mood","stress","immune"],avoidPreg:false,irritant:false,strong:false},
+    {name:"로즈우드",cat:"Floral",tags:["stress","sleep","skin_trouble","grounding"],avoidPreg:false,irritant:false,strong:false},
+
+    // Citrus 7
+    {name:"레몬그라스",cat:"Citrus",tags:["diet","cellulite","swelling","immune"],avoidPreg:true,irritant:true,strong:true},
+    {name:"스위트오렌지",cat:"Citrus",tags:["mood","stress","sleep","immune"],avoidPreg:false,irritant:false,strong:false},
+    {name:"레몬",cat:"Citrus",tags:["focus","mood","diet","immune"],avoidPreg:false,irritant:false,strong:true},
+    {name:"라임",cat:"Citrus",tags:["focus","mood","diet","immune"],avoidPreg:false,irritant:false,strong:true},
+    {name:"그레이프프룻",cat:"Citrus",tags:["diet","cellulite","mood","swelling"],avoidPreg:false,irritant:false,strong:false},
+    {name:"베르가못",cat:"Citrus",tags:["stress","mood","sleep","focus"],avoidPreg:false,irritant:false,strong:false},
+    {name:"만다린",cat:"Citrus",tags:["sleep","mood","stress","grounding"],avoidPreg:false,irritant:false,strong:false},
+
+    // Minty 2
+    {name:"스피어민트",cat:"Minty",tags:["focus","respiration","mood","immune"],avoidPreg:false,irritant:false,strong:true},
+    {name:"페퍼민트",cat:"Minty",tags:["focus","respiration","muscle_pain","mood"],avoidPreg:false,irritant:true,strong:true},
+
+    // Herbal 7
+    {name:"티트리",cat:"Herbal",tags:["skin_trouble","immune","respiration","grounding"],avoidPreg:false,irritant:true,strong:true},
+    {name:"마조람",cat:"Herbal",tags:["muscle_pain","sleep","stress","grounding"],avoidPreg:false,irritant:false,strong:false},
+    {name:"바질",cat:"Herbal",tags:["focus","respiration","muscle_pain","immune"],avoidPreg:true,irritant:true,strong:true},
+    {name:"라반딘",cat:"Herbal",tags:["sleep","stress","muscle_pain","mood"],avoidPreg:false,irritant:false,strong:false},
+    {name:"유칼립투스",cat:"Herbal",tags:["respiration","focus","immune","mood"],avoidPreg:false,irritant:true,strong:true},
+    {name:"시트로넬라",cat:"Herbal",tags:["mood","immune","swelling","grounding"],avoidPreg:true,irritant:true,strong:true},
+    {name:"로즈마리",cat:"Herbal",tags:["muscle_pain","swelling","focus","diet"],avoidPreg:true,irritant:true,strong:true},
+
+    // Woody 6
+    {name:"사이프레스",cat:"Woody",tags:["swelling","cellulite","grounding","respiration"],avoidPreg:false,irritant:false,strong:false},
+    {name:"시더우드",cat:"Woody",tags:["sleep","grounding","stress","respiration"],avoidPreg:false,irritant:false,strong:false},
+    {name:"파인",cat:"Woody",tags:["respiration","immune","focus","grounding"],avoidPreg:false,irritant:true,strong:true},
+    {name:"편백",cat:"Woody",tags:["grounding","stress","respiration","sleep"],avoidPreg:false,irritant:false,strong:false},
+    {name:"주니퍼베리",cat:"Woody",tags:["swelling","cellulite","immune","grounding"],avoidPreg:true,irritant:true,strong:true},
+    {name:"프랑킨센스",cat:"Woody",tags:["stress","sleep","respiration","grounding"],avoidPreg:false,irritant:false,strong:false},
+
+    // Spicy 3
+    {name:"시나몬바크",cat:"Spicy",tags:["diet","immune","grounding","mood"],avoidPreg:true,irritant:true,strong:true},
+    {name:"클로브버드",cat:"Spicy",tags:["immune","skin_trouble","grounding","mood"],avoidPreg:true,irritant:true,strong:true},
+    {name:"펜넬시드",cat:"Spicy",tags:["diet","swelling","cellulite","grounding"],avoidPreg:true,irritant:true,strong:true},
+  ];
+
+  // refs
+  const steps = [...document.querySelectorAll(".step")];
+  const fill = document.getElementById("fill");
+  const stepText = document.getElementById("stepText");
+  const backBtn = document.getElementById("backBtn");
+  const nextBtn = document.getElementById("nextBtn");
+  const resultBox = document.getElementById("resultBox");
+  const copyBtn = document.getElementById("copyBtn");
+  const resetBtn = document.getElementById("resetBtn");
+  const chipWrap = document.getElementById("oilExcludeChips");
+  const toast = document.getElementById("toast");
+  const excludedByName = new Set();
+
+  let currentStep = 1;
+
+  function buildChips(){
+    chipWrap.innerHTML = "";
+    OILS.forEach(o=>{
+      const d = document.createElement("div");
+      d.className = "chip";
+      d.textContent = o.name;
+      d.addEventListener("click", ()=>{
+        if(excludedByName.has(o.name)){
+          excludedByName.delete(o.name);
+          d.classList.remove("active");
+        } else {
+          excludedByName.add(o.name);
+          d.classList.add("active");
+        }
+      });
+      chipWrap.appendChild(d);
+    });
+  }
+  buildChips();
+
+  function setStep(n){
+    currentStep = n;
+    steps.forEach(s=>s.classList.remove("active"));
+    document.querySelector(`.step[data-step="${n}"]`).classList.add("active");
+    fill.style.width = `${(n-1)/4*100}%`;
+    stepText.textContent = `STEP ${n} / 5`;
+    backBtn.disabled = (n===1);
+    nextBtn.textContent = (n===4) ? "결과 확인" : "다음";
+    if(n===5){ nextBtn.disabled = true; backBtn.disabled = true; }
+    else { nextBtn.disabled = false; }
+    if(toast) toast.classList.remove("show");
+  }
+
+  function getCheckedValues(selector){
+    return [...document.querySelectorAll(selector)].filter(i=>i.checked).map(i=>i.value);
+  }
+  function getSymptoms(){ return getCheckedValues('section[data-step="1"] input[type="checkbox"]'); }
+  function getPrefs(){ return getCheckedValues(".prefCat"); }
+  function getHates(){ return getCheckedValues(".hateCat"); }
+
+  // selection limit
+  function limitCats(selector, max=2){
+    const boxes=[...document.querySelectorAll(selector)];
+    boxes.forEach(b=>{
+      b.addEventListener("change", ()=>{
+        const chosen=boxes.filter(x=>x.checked);
+        if(chosen.length>max){ b.checked=false; alert(`최대 ${max}개까지 선택할 수 있어요.`); }
+      });
+    });
+  }
+  limitCats(".prefCat",2);
+  limitCats(".hateCat",2);
+  limitCats('section[data-step="1"] input[type="checkbox"]', 6);
+
+  const symptomWeight = {
+    muscle_pain:3, swelling:3, cellulite:3, diet:3, stress:3, sleep:3, skin_trouble:3, respiration:2
+  };
+
+  // 결과가 "매번 똑같아 보이는" 현상 완화용 미세 랜덤(가중치)
+  function jitter(){
+    return (Math.random() * 0.6) - 0.3; // -0.3 ~ +0.3
+  }
+
+  function compute(){
+    const symptoms = getSymptoms();
+    const prefs = getPrefs();
+    const hates = getHates();
+    const intensity = parseInt(document.getElementById("intensity").value,10);
+
+    const pregnant = document.getElementById("pregnant").checked;
+    const verySensitive = document.getElementById("verySensitive").checked;
+    const headacheStrong = document.getElementById("headacheStrong").checked;
+    const asthmaLike = document.getElementById("asthmaLike").checked;
+
+    let candidates = OILS.filter(o=>!excludedByName.has(o.name));
+
+    // hard excludes (보수적으로)
+    candidates = candidates.filter(o=>{
+      if(pregnant && o.avoidPreg) return false;
+      if(verySensitive && o.irritant) return false;
+      return true;
+    });
+
+    const strongPenalty = (headacheStrong?3:0) + (asthmaLike?2:0);
+
+    const scored = candidates.map(o=>{
+      let s=0;
+      symptoms.forEach(sym=>{ if(o.tags.includes(sym)) s += (symptomWeight[sym] ?? 1); });
+      if(prefs.includes(o.cat)) s += 2;
+      if(hates.includes(o.cat)) s -= 4;
+
+      if(o.strong){
+        if(intensity<=2) s -= 2;
+        if(intensity>=4) s += 1;
+        s -= strongPenalty;
+      }
+
+      // 너무 뻔한 결과 방지: 아주 작은 흔들림(동점 정렬 분산)
+      s += jitter();
+
+      return {...o, score:s};
+    }).sort((a,b)=>b.score-a.score);
+
+    // pick 3 with rules
+    const picked=[];
+    const catCount={};
+    let spicyCount=0, mintyCount=0;
+
+    function canPick(o){
+      if((catCount[o.cat]??0) >= 2) return false;       // 같은 계열 최대 2
+      if(o.cat==="Spicy" && spicyCount>=1) return false; // 스파이시는 1개까지만
+      if(o.cat==="Minty" && mintyCount>=1 && !prefs.includes("Minty")) return false; // 민티 과다 방지
+      return true;
+    }
+
+    for(const o of scored){
+      if(picked.length>=3) break;
+      if(o.score < -1 && picked.length>=1) continue; // 너무 낮은 점수만 배제(다양성 ↑)
+      if(canPick(o)){
+        picked.push(o);
+        catCount[o.cat]=(catCount[o.cat]??0)+1;
+        if(o.cat==="Spicy") spicyCount++;
+        if(o.cat==="Minty") mintyCount++;
+      }
+    }
+
+    // 부족하면 상위권에서 채움
+    if(picked.length<3){
+      for(const o of scored){
+        if(picked.length>=3) break;
+        if(picked.find(x=>x.name===o.name)) continue;
+        picked.push(o);
+      }
+    }
+
+    // 계열이 너무 단조로우면 1개 교체
+    const cats = new Set(picked.map(x=>x.cat));
+    if(cats.size===1){
+      const main = picked[0].cat;
+      const alt = scored.find(o=>o.cat!==main && !picked.find(x=>x.name===o.name));
+      if(alt) picked[2]=alt;
+    }
+
+    const topNeeds = symptoms.map(s=>TAG_LABEL[s]).filter(Boolean);
+
+    return {
+      symptoms,prefs,hates,intensity,
+      flags:{pregnant,verySensitive,headacheStrong,asthmaLike},
+      picked,topNeeds
+    };
+  }
+
+  function roleLabel(idx){ return (idx<2) ? "기능" : "베이스"; }
+
+  function renderResult(data){
+    const {picked,prefs,hates,flags,topNeeds} = data;
+
+    const safetyNotes=[];
+    if(flags.pregnant) safetyNotes.push("임신 가능성 체크됨(일부 오일 제외)");
+    if(flags.verySensitive) safetyNotes.push("민감피부 체크됨(자극성 오일 제외)");
+    if(flags.headacheStrong) safetyNotes.push("진한 향 민감(강향 오일 후순위)");
+    if(flags.asthmaLike) safetyNotes.push("호흡기 예민(강향/자극 오일 후순위)");
+
+    const reasons=[];
+    reasons.push(`오늘 선택한 컨디션: <b>${topNeeds.join(", ") || "—"}</b>`);
+    if(prefs.length) reasons.push(`좋아하는 향: <b>${prefs.join(", ")}</b>`);
+    if(hates.length) reasons.push(`피하고 싶은 향: <b>${hates.join(", ")}</b>`);
+    if(safetyNotes.length) reasons.push(`안전 체크: <b>${safetyNotes.join(" · ")}</b>`);
+
+    // base ordering (안정/수면/스트레스 성격이 강한 오일을 베이스로)
+    const base = [...picked].sort((a,b)=>{
+      const aB=(a.tags.includes("grounding")?2:0)+(a.tags.includes("sleep")?2:0)+(a.tags.includes("stress")?1:0);
+      const bB=(b.tags.includes("grounding")?2:0)+(b.tags.includes("sleep")?2:0)+(b.tags.includes("stress")?1:0);
+      return bB-aB;
+    })[0];
+
+    let ordered = picked.filter(o=>o.name!==base.name);
+    ordered.push(base);
+
+    const list = ordered.map((o,idx)=>{
+      const tagText = o.tags.map(t=>TAG_LABEL[t]||t).join(" · ");
+      return `<li><b>${o.name}</b> <span class="pill">${o.cat}</span> <span class="pill">${roleLabel(idx)}</span><br><span class="tiny muted">${tagText}</span></li>`;
+    }).join("");
+
+    const ratioText = `권장 비율(총 5방울): ${ordered[0].name} 2 · ${ordered[1].name} 2 · ${ordered[2].name} 1`;
+
+    resultBox.innerHTML = `
+      <div class="resultTop">
+        <div class="pill">맞춤 3종 블렌딩</div>
+        <div class="pill">${ratioText}</div>
+      </div>
+      <div class="recipe">
+        <h3>오늘의 추천 레시피</h3>
+        <ol class="ol">${list}</ol>
+        <div class="reason">${reasons.join("<br>")}</div>
+      </div>
+      <div class="smallGrid">
+        <div class="kv"><b>사용 안내</b> 캐리어(호호바) 10ml 기준 1~2% 희석을 권장합니다. 민감피부는 더 낮게 시작해 주세요.</div>
+        <div class="kv"><b>매장 안내</b> 방문 시 테라피스트가 컨디션을 다시 확인하고 블렌딩을 미세 조절해드려요.</div>
+      </div>
+      <div class="disclaimer" style="margin-top:12px;">
+        <strong>참고</strong><br>
+        본 결과는 웰니스 목적의 향 추천입니다. 피부 반응이 있으면 즉시 중단하고, 임신/질환/약물 복용 중이면 전문가 상담이 필요합니다.
+      </div>
+    `;
+  }
+
+  function guardStep1(){
+    if(getSymptoms().length===0){
+      alert("STEP 1에서 최소 1개 이상 선택해 주세요.");
+      return false;
+    }
+    return true;
+  }
+
+  function next(){
+    if(currentStep===1){
+      if(!guardStep1()) return;
+      setStep(2); return;
+    }
+    if(currentStep===2){ setStep(3); return; }
+    if(currentStep===3){ setStep(4); return; }
+    if(currentStep===4){
+      const data = compute();
+      renderResult(data);
+      setStep(5);
+      return;
+    }
+  }
+  function back(){ if(currentStep>1) setStep(currentStep-1); }
+
+  nextBtn.addEventListener("click", next);
+  backBtn.addEventListener("click", back);
+
+  copyBtn.addEventListener("click", async ()=>{
+    const data = compute();
+    // 렌더에서 정렬한 순서와 동일하게 만들기 위해 base 정렬 다시
+    const picked = data.picked;
+    const base = [...picked].sort((a,b)=>{
+      const aB=(a.tags.includes("grounding")?2:0)+(a.tags.includes("sleep")?2:0)+(a.tags.includes("stress")?1:0);
+      const bB=(b.tags.includes("grounding")?2:0)+(b.tags.includes("sleep")?2:0)+(b.tags.includes("stress")?1:0);
+      return bB-aB;
+    })[0];
+    let ordered = picked.filter(o=>o.name!==base.name);
+    ordered.push(base);
+
+    const memo = document.getElementById("memo").value?.trim() || "-";
+    const cond = (data.topNeeds.join(", ") || "-");
+    const like = (data.prefs.join(", ") || "-");
+    const dislike = (data.hates.join(", ") || "-");
+
+    // 
+    const txt = [예약문의는 네이버 톡톡 혹은 카카오채널로도 가능합니다.]
+      "SPA BABYDUCK | 오늘의 3종 맞춤 블렌딩 결과",
+      `- 컨디션: ${cond}`,
+      `- 선호 향: ${like}`,
+      `- 비선호 향: ${dislike}`,
+      `- 추천 레시피(5방울): ${ordered[0].name} 2 / ${ordered[1].name} 2 / ${ordered[2].name} 1`,
+      `- 메모: ${memo}`,
+      "",
+      "원하실경우 이 내용을 그대로 보내주시면, 방문 시 컨디션에 맞게 블렌딩을 미세 조절해드려요."
+    ].join("\n");
+
+    try{
+      await navigator.clipboard.writeText(txt);
+      toast.classList.add("show");
+      setTimeout(()=>toast.classList.remove("show"), 2500);
+    }catch(e){
+      prompt("복사가 제한된 환경입니다. 아래 내용을 길게 눌러 복사해 주세요.", txt);
+    }
+  });
+
+  resetBtn.addEventListener("click", ()=>{
+    document.querySelectorAll('input[type="checkbox"]').forEach(i=>i.checked=false);
+    document.getElementById("intensity").value=3;
+    document.getElementById("memo").value="";
+    excludedByName.clear();
+    document.querySelectorAll(".chip").forEach(c=>c.classList.remove("active"));
+    setStep(1);
+  });
+
+  setStep(1);
+})();
+</script>
 </body>
 </html>
