@@ -173,8 +173,8 @@
       <div id="resultBox" class="resultBox"></div>
 
       <div class="actions">
-        <button class="btn" id="copyBtn">결과 복사</button>
-        <button class="btn ghost" id="resetBtn">다시하기</button>
+        <button class="btn" id="copyBtn" type="button">결과 복사</button>
+        <button class="btn ghost" id="resetBtn" type="button">다시하기</button>
       </div>
 
       <div id="toast" class="toast">복사 완료. 메시지/메모에 붙여넣기 해주세요.</div>
@@ -187,14 +187,13 @@
   </main>
 
   <footer class="nav">
-    <button class="btn ghost" id="backBtn" disabled>이전</button>
-    <button class="btn" id="nextBtn">다음</button>
+    <button class="btn ghost" id="backBtn" type="button" disabled>이전</button>
+    <button class="btn" id="nextBtn" type="button">다음</button>
   </footer>
 </div>
 
 <script>
 (() => {
-  // 고객용 라벨
   const TAG_LABEL = {
     muscle_pain:"근육 뭉침/피로",
     swelling:"부종/순환",
@@ -210,11 +209,10 @@
     focus:"집중/리프레시"
   };
 
-  // 33종
   const OILS = [
     // Floral 8
     {name:"네롤리",cat:"Floral",tags:["stress","sleep","mood","grounding"],avoidPreg:false,irritant:false,strong:false},
-    {name:"제라늄",cat:"Floral",tags:["stress","mood","swelling","skin_trouble"],avoidPreg:false,irritant:false,strong:false},
+    {name:"제라늄",cat:"Floral",tags:["stress","mood","swelling","skin_trouble"],avoidPreg:false,irant:false,strong:false},
     {name:"클라리세이지",cat:"Floral",tags:["stress","sleep","mood","muscle_pain"],avoidPreg:true,irritant:false,strong:false},
     {name:"로즈제라늄",cat:"Floral",tags:["stress","mood","skin_trouble","swelling"],avoidPreg:false,irritant:false,strong:false},
     {name:"일랑일랑",cat:"Floral",tags:["stress","sleep","mood","grounding"],avoidPreg:false,irritant:false,strong:true},
@@ -258,303 +256,311 @@
     {name:"펜넬시드",cat:"Spicy",tags:["diet","swelling","cellulite","grounding"],avoidPreg:true,irritant:true,strong:true},
   ];
 
-  // refs
-  const steps = [...document.querySelectorAll(".step")];
-  const fill = document.getElementById("fill");
-  const stepText = document.getElementById("stepText");
-  const backBtn = document.getElementById("backBtn");
-  const nextBtn = document.getElementById("nextBtn");
-  const resultBox = document.getElementById("resultBox");
-  const copyBtn = document.getElementById("copyBtn");
-  const resetBtn = document.getElementById("resetBtn");
-  const chipWrap = document.getElementById("oilExcludeChips");
-  const toast = document.getElementById("toast");
-  const excludedByName = new Set();
+  // 안정성: DOM 로딩 후 실행
+  window.addEventListener("DOMContentLoaded", () => {
+    const steps = [...document.querySelectorAll(".step")];
+    const fill = document.getElementById("fill");
+    const stepText = document.getElementById("stepText");
+    const chipWrap = document.getElementById("oilExcludeChips");
+    const toast = document.getElementById("toast");
+    const excludedByName = new Set();
 
-  let currentStep = 1;
+    let currentStep = 1;
 
-  function buildChips(){
-    chipWrap.innerHTML = "";
-    OILS.forEach(o=>{
-      const d = document.createElement("div");
-      d.className = "chip";
-      d.textContent = o.name;
-      d.addEventListener("click", ()=>{
-        if(excludedByName.has(o.name)){
-          excludedByName.delete(o.name);
-          d.classList.remove("active");
-        } else {
-          excludedByName.add(o.name);
-          d.classList.add("active");
-        }
-      });
-      chipWrap.appendChild(d);
-    });
-  }
-  buildChips();
-
-  function setStep(n){
-    currentStep = n;
-    steps.forEach(s=>s.classList.remove("active"));
-    document.querySelector(`.step[data-step="${n}"]`).classList.add("active");
-    fill.style.width = `${(n-1)/4*100}%`;
-    stepText.textContent = `STEP ${n} / 5`;
-    backBtn.disabled = (n===1);
-    nextBtn.textContent = (n===4) ? "결과 확인" : "다음";
-    if(n===5){ nextBtn.disabled = true; backBtn.disabled = true; }
-    else { nextBtn.disabled = false; }
-    if(toast) toast.classList.remove("show");
-  }
-
-  function getCheckedValues(selector){
-    return [...document.querySelectorAll(selector)].filter(i=>i.checked).map(i=>i.value);
-  }
-  function getSymptoms(){ return getCheckedValues('section[data-step="1"] input[type="checkbox"]'); }
-  function getPrefs(){ return getCheckedValues(".prefCat"); }
-  function getHates(){ return getCheckedValues(".hateCat"); }
-
-  // selection limit
-  function limitCats(selector, max=2){
-    const boxes=[...document.querySelectorAll(selector)];
-    boxes.forEach(b=>{
-      b.addEventListener("change", ()=>{
-        const chosen=boxes.filter(x=>x.checked);
-        if(chosen.length>max){ b.checked=false; alert(`최대 ${max}개까지 선택할 수 있어요.`); }
-      });
-    });
-  }
-  limitCats(".prefCat",2);
-  limitCats(".hateCat",2);
-  limitCats('section[data-step="1"] input[type="checkbox"]', 6);
-
-  const symptomWeight = {
-    muscle_pain:3, swelling:3, cellulite:3, diet:3, stress:3, sleep:3, skin_trouble:3, respiration:2
-  };
-
-  // 결과가 "매번 똑같아 보이는" 현상 완화용 미세 랜덤(가중치)
-  function jitter(){
-    return (Math.random() * 0.6) - 0.3; // -0.3 ~ +0.3
-  }
-
-  function compute(){
-    const symptoms = getSymptoms();
-    const prefs = getPrefs();
-    const hates = getHates();
-    const intensity = parseInt(document.getElementById("intensity").value,10);
-
-    const pregnant = document.getElementById("pregnant").checked;
-    const verySensitive = document.getElementById("verySensitive").checked;
-    const headacheStrong = document.getElementById("headacheStrong").checked;
-    const asthmaLike = document.getElementById("asthmaLike").checked;
-
-    let candidates = OILS.filter(o=>!excludedByName.has(o.name));
-
-    // hard excludes (보수적으로)
-    candidates = candidates.filter(o=>{
-      if(pregnant && o.avoidPreg) return false;
-      if(verySensitive && o.irritant) return false;
-      return true;
-    });
-
-    const strongPenalty = (headacheStrong?3:0) + (asthmaLike?2:0);
-
-    const scored = candidates.map(o=>{
-      let s=0;
-      symptoms.forEach(sym=>{ if(o.tags.includes(sym)) s += (symptomWeight[sym] ?? 1); });
-      if(prefs.includes(o.cat)) s += 2;
-      if(hates.includes(o.cat)) s -= 4;
-
-      if(o.strong){
-        if(intensity<=2) s -= 2;
-        if(intensity>=4) s += 1;
-        s -= strongPenalty;
-      }
-
-      // 너무 뻔한 결과 방지: 아주 작은 흔들림(동점 정렬 분산)
-      s += jitter();
-
-      return {...o, score:s};
-    }).sort((a,b)=>b.score-a.score);
-
-    // pick 3 with rules
-    const picked=[];
-    const catCount={};
-    let spicyCount=0, mintyCount=0;
-
-    function canPick(o){
-      if((catCount[o.cat]??0) >= 2) return false;       // 같은 계열 최대 2
-      if(o.cat==="Spicy" && spicyCount>=1) return false; // 스파이시는 1개까지만
-      if(o.cat==="Minty" && mintyCount>=1 && !prefs.includes("Minty")) return false; // 민티 과다 방지
-      return true;
-    }
-
-    for(const o of scored){
-      if(picked.length>=3) break;
-      if(o.score < -1 && picked.length>=1) continue; // 너무 낮은 점수만 배제(다양성 ↑)
-      if(canPick(o)){
-        picked.push(o);
-        catCount[o.cat]=(catCount[o.cat]??0)+1;
-        if(o.cat==="Spicy") spicyCount++;
-        if(o.cat==="Minty") mintyCount++;
-      }
-    }
-
-    // 부족하면 상위권에서 채움
-    if(picked.length<3){
-      for(const o of scored){
-        if(picked.length>=3) break;
-        if(picked.find(x=>x.name===o.name)) continue;
-        picked.push(o);
-      }
-    }
-
-    // 계열이 너무 단조로우면 1개 교체
-    const cats = new Set(picked.map(x=>x.cat));
-    if(cats.size===1){
-      const main = picked[0].cat;
-      const alt = scored.find(o=>o.cat!==main && !picked.find(x=>x.name===o.name));
-      if(alt) picked[2]=alt;
-    }
-
-    const topNeeds = symptoms.map(s=>TAG_LABEL[s]).filter(Boolean);
-
-    return {
-      symptoms,prefs,hates,intensity,
-      flags:{pregnant,verySensitive,headacheStrong,asthmaLike},
-      picked,topNeeds
-    };
-  }
-
-  function roleLabel(idx){ return (idx<2) ? "기능" : "베이스"; }
-
-  function renderResult(data){
-    const {picked,prefs,hates,flags,topNeeds} = data;
-
-    const safetyNotes=[];
-    if(flags.pregnant) safetyNotes.push("임신 가능성 체크됨(일부 오일 제외)");
-    if(flags.verySensitive) safetyNotes.push("민감피부 체크됨(자극성 오일 제외)");
-    if(flags.headacheStrong) safetyNotes.push("진한 향 민감(강향 오일 후순위)");
-    if(flags.asthmaLike) safetyNotes.push("호흡기 예민(강향/자극 오일 후순위)");
-
-    const reasons=[];
-    reasons.push(`오늘 선택한 컨디션: <b>${topNeeds.join(", ") || "—"}</b>`);
-    if(prefs.length) reasons.push(`좋아하는 향: <b>${prefs.join(", ")}</b>`);
-    if(hates.length) reasons.push(`피하고 싶은 향: <b>${hates.join(", ")}</b>`);
-    if(safetyNotes.length) reasons.push(`안전 체크: <b>${safetyNotes.join(" · ")}</b>`);
-
-    // base ordering (안정/수면/스트레스 성격이 강한 오일을 베이스로)
-    const base = [...picked].sort((a,b)=>{
-      const aB=(a.tags.includes("grounding")?2:0)+(a.tags.includes("sleep")?2:0)+(a.tags.includes("stress")?1:0);
-      const bB=(b.tags.includes("grounding")?2:0)+(b.tags.includes("sleep")?2:0)+(b.tags.includes("stress")?1:0);
-      return bB-aB;
-    })[0];
-
-    let ordered = picked.filter(o=>o.name!==base.name);
-    ordered.push(base);
-
-    const list = ordered.map((o,idx)=>{
-      const tagText = o.tags.map(t=>TAG_LABEL[t]||t).join(" · ");
-      return `<li><b>${o.name}</b> <span class="pill">${o.cat}</span> <span class="pill">${roleLabel(idx)}</span><br><span class="tiny muted">${tagText}</span></li>`;
-    }).join("");
-
-    const ratioText = `권장 비율(총 5방울): ${ordered[0].name} 2 · ${ordered[1].name} 2 · ${ordered[2].name} 1`;
-
-    resultBox.innerHTML = `
-      <div class="resultTop">
-        <div class="pill">맞춤 3종 블렌딩</div>
-        <div class="pill">${ratioText}</div>
-      </div>
-      <div class="recipe">
-        <h3>오늘의 추천 레시피</h3>
-        <ol class="ol">${list}</ol>
-        <div class="reason">${reasons.join("<br>")}</div>
-      </div>
-      <div class="smallGrid">
-        <div class="kv"><b>사용 안내</b> 캐리어(호호바) 10ml 기준 1~2% 희석을 권장합니다. 민감피부는 더 낮게 시작해 주세요.</div>
-        <div class="kv"><b>매장 안내</b> 방문 시 테라피스트가 컨디션을 다시 확인하고 블렌딩을 미세 조절해드려요.</div>
-      </div>
-      <div class="disclaimer" style="margin-top:12px;">
-        <strong>참고</strong><br>
-        본 결과는 웰니스 목적의 향 추천입니다. 피부 반응이 있으면 즉시 중단하고, 임신/질환/약물 복용 중이면 전문가 상담이 필요합니다.
-      </div>
-    `;
-  }
-
-  function guardStep1(){
-    if(getSymptoms().length===0){
-      alert("STEP 1에서 최소 1개 이상 선택해 주세요.");
-      return false;
-    }
-    return true;
-  }
-
-  function next(){
-    if(currentStep===1){
-      if(!guardStep1()) return;
-      setStep(2); return;
-    }
-    if(currentStep===2){ setStep(3); return; }
-    if(currentStep===3){ setStep(4); return; }
-    if(currentStep===4){
-      const data = compute();
-      renderResult(data);
-      setStep(5);
-      return;
-    }
-  }
-  function back(){ if(currentStep>1) setStep(currentStep-1); }
-
-  nextBtn.addEventListener("click", next);
-  backBtn.addEventListener("click", back);
-
-  copyBtn.addEventListener("click", async ()=>{
-    const data = compute();
-    // 렌더에서 정렬한 순서와 동일하게 만들기 위해 base 정렬 다시
-    const picked = data.picked;
-    const base = [...picked].sort((a,b)=>{
-      const aB=(a.tags.includes("grounding")?2:0)+(a.tags.includes("sleep")?2:0)+(a.tags.includes("stress")?1:0);
-      const bB=(b.tags.includes("grounding")?2:0)+(b.tags.includes("sleep")?2:0)+(b.tags.includes("stress")?1:0);
-      return bB-aB;
-    })[0];
-    let ordered = picked.filter(o=>o.name!==base.name);
-    ordered.push(base);
-
-    const memo = document.getElementById("memo").value?.trim() || "-";
-    const cond = (data.topNeeds.join(", ") || "-");
-    const like = (data.prefs.join(", ") || "-");
-    const dislike = (data.hates.join(", ") || "-");
-
-    // 
-    const txt = [예약문의는 네이버 톡톡 혹은 카카오채널로도 가능합니다.]
-      "SPA BABYDUCK | 오늘의 3종 맞춤 블렌딩 결과",
-      `- 컨디션: ${cond}`,
-      `- 선호 향: ${like}`,
-      `- 비선호 향: ${dislike}`,
-      `- 추천 레시피(5방울): ${ordered[0].name} 2 / ${ordered[1].name} 2 / ${ordered[2].name} 1`,
-      `- 메모: ${memo}`,
-      "",
-      "원하실경우 이 내용을 그대로 보내주시면, 방문 시 컨디션에 맞게 블렌딩을 미세 조절해드려요."
-    ].join("\n");
-
-    try{
-      await navigator.clipboard.writeText(txt);
+    // 유틸
+    function $(id){ return document.getElementById(id); }
+    function showToast(msg){
+      if(!toast) return;
+      toast.textContent = msg;
       toast.classList.add("show");
       setTimeout(()=>toast.classList.remove("show"), 2500);
-    }catch(e){
-      prompt("복사가 제한된 환경입니다. 아래 내용을 길게 눌러 복사해 주세요.", txt);
     }
-  });
 
-  resetBtn.addEventListener("click", ()=>{
-    document.querySelectorAll('input[type="checkbox"]').forEach(i=>i.checked=false);
-    document.getElementById("intensity").value=3;
-    document.getElementById("memo").value="";
-    excludedByName.clear();
-    document.querySelectorAll(".chip").forEach(c=>c.classList.remove("active"));
+    function buildChips(){
+      chipWrap.innerHTML = "";
+      OILS.forEach(o=>{
+        const d = document.createElement("div");
+        d.className = "chip";
+        d.textContent = o.name;
+        d.addEventListener("click", ()=>{
+          if(excludedByName.has(o.name)){
+            excludedByName.delete(o.name);
+            d.classList.remove("active");
+          } else {
+            excludedByName.add(o.name);
+            d.classList.add("active");
+          }
+        });
+        chipWrap.appendChild(d);
+      });
+    }
+    buildChips();
+
+    function setStep(n){
+      currentStep = n;
+      steps.forEach(s=>s.classList.remove("active"));
+      const target = document.querySelector(`.step[data-step="${n}"]`);
+      if(!target) return;
+      target.classList.add("active");
+
+      if(fill) fill.style.width = `${(n-1)/4*100}%`;
+      if(stepText) stepText.textContent = `STEP ${n} / 5`;
+
+      const backBtn = $("backBtn");
+      const nextBtn = $("nextBtn");
+      if(backBtn) backBtn.disabled = (n===1);
+      if(nextBtn) nextBtn.textContent = (n===4) ? "결과 확인" : "다음";
+      if(n===5){
+        if(nextBtn) nextBtn.disabled = true;
+        if(backBtn) backBtn.disabled = true;
+      }else{
+        if(nextBtn) nextBtn.disabled = false;
+      }
+      if(toast) toast.classList.remove("show");
+    }
+
+    function getCheckedValues(selector){
+      return [...document.querySelectorAll(selector)].filter(i=>i.checked).map(i=>i.value);
+    }
+    function getSymptoms(){ return getCheckedValues('section[data-step="1"] input[type="checkbox"]'); }
+    function getPrefs(){ return getCheckedValues(".prefCat"); }
+    function getHates(){ return getCheckedValues(".hateCat"); }
+
+    // 선택 제한
+    function limitCats(selector, max){
+      const boxes=[...document.querySelectorAll(selector)];
+      boxes.forEach(b=>{
+        b.addEventListener("change", ()=>{
+          const chosen=boxes.filter(x=>x.checked);
+          if(chosen.length>max){
+            b.checked=false;
+            alert(`최대 ${max}개까지 선택할 수 있어요.`);
+          }
+        });
+      });
+    }
+    limitCats(".prefCat",2);
+    limitCats(".hateCat",2);
+    limitCats('section[data-step="1"] input[type="checkbox"]', 6);
+
+    const symptomWeight = {
+      muscle_pain:3, swelling:3, cellulite:3, diet:3, stress:3, sleep:3, skin_trouble:3, respiration:2
+    };
+    function jitter(){ return (Math.random()*0.6)-0.3; }
+
+    function compute(){
+      const symptoms = getSymptoms();
+      const prefs = getPrefs();
+      const hates = getHates();
+      const intensity = parseInt($("intensity")?.value || "3", 10);
+
+      const pregnant = $("pregnant")?.checked || false;
+      const verySensitive = $("verySensitive")?.checked || false;
+      const headacheStrong = $("headacheStrong")?.checked || false;
+      const asthmaLike = $("asthmaLike")?.checked || false;
+
+      let candidates = OILS.filter(o=>!excludedByName.has(o.name));
+
+      // 안전 우선 제외
+      candidates = candidates.filter(o=>{
+        if(pregnant && o.avoidPreg) return false;
+        if(verySensitive && o.irritant) return false;
+        return true;
+      });
+
+      const strongPenalty = (headacheStrong?3:0) + (asthmaLike?2:0);
+
+      const scored = candidates.map(o=>{
+        let s=0;
+        symptoms.forEach(sym=>{ if(o.tags.includes(sym)) s += (symptomWeight[sym] ?? 1); });
+        if(prefs.includes(o.cat)) s += 2;
+        if(hates.includes(o.cat)) s -= 4;
+
+        if(o.strong){
+          if(intensity<=2) s -= 2;
+          if(intensity>=4) s += 1;
+          s -= strongPenalty;
+        }
+
+        s += jitter();
+        return {...o, score:s};
+      }).sort((a,b)=>b.score-a.score);
+
+      const picked=[];
+      const catCount={};
+      let spicyCount=0, mintyCount=0;
+
+      function canPick(o){
+        if((catCount[o.cat]??0) >= 2) return false;
+        if(o.cat==="Spicy" && spicyCount>=1) return false;
+        if(o.cat==="Minty" && mintyCount>=1 && !prefs.includes("Minty")) return false;
+        return true;
+      }
+
+      for(const o of scored){
+        if(picked.length>=3) break;
+        if(o.score < -1 && picked.length>=1) continue;
+        if(canPick(o)){
+          picked.push(o);
+          catCount[o.cat]=(catCount[o.cat]??0)+1;
+          if(o.cat==="Spicy") spicyCount++;
+          if(o.cat==="Minty") mintyCount++;
+        }
+      }
+
+      if(picked.length<3){
+        for(const o of scored){
+          if(picked.length>=3) break;
+          if(picked.find(x=>x.name===o.name)) continue;
+          picked.push(o);
+        }
+      }
+
+      const cats = new Set(picked.map(x=>x.cat));
+      if(cats.size===1){
+        const main = picked[0].cat;
+        const alt = scored.find(o=>o.cat!==main && !picked.find(x=>x.name===o.name));
+        if(alt) picked[2]=alt;
+      }
+
+      const topNeeds = symptoms.map(s=>TAG_LABEL[s]).filter(Boolean);
+      return {symptoms,prefs,hates,intensity,flags:{pregnant,verySensitive,headacheStrong,asthmaLike},picked,topNeeds};
+    }
+
+    function renderResult(data){
+      const resultBox = $("resultBox");
+      if(!resultBox) return;
+
+      const {picked,prefs,hates,flags,topNeeds} = data;
+
+      const safetyNotes=[];
+      if(flags.pregnant) safetyNotes.push("임신 가능성 체크됨(일부 오일 제외)");
+      if(flags.verySensitive) safetyNotes.push("민감피부 체크됨(자극성 오일 제외)");
+      if(flags.headacheStrong) safetyNotes.push("진한 향 민감(강향 오일 후순위)");
+      if(flags.asthmaLike) safetyNotes.push("호흡기 예민(강향/자극 오일 후순위)");
+
+      const reasons=[];
+      reasons.push(`오늘 선택한 컨디션: <b>${topNeeds.join(", ") || "—"}</b>`);
+      if(prefs.length) reasons.push(`좋아하는 향: <b>${prefs.join(", ")}</b>`);
+      if(hates.length) reasons.push(`피하고 싶은 향: <b>${hates.join(", ")}</b>`);
+      if(safetyNotes.length) reasons.push(`안전 체크: <b>${safetyNotes.join(" · ")}</b>`);
+
+      const base = [...picked].sort((a,b)=>{
+        const aB=(a.tags.includes("grounding")?2:0)+(a.tags.includes("sleep")?2:0)+(a.tags.includes("stress")?1:0);
+        const bB=(b.tags.includes("grounding")?2:0)+(b.tags.includes("sleep")?2:0)+(b.tags.includes("stress")?1:0);
+        return bB-aB;
+      })[0];
+
+      let ordered = picked.filter(o=>o.name!==base.name);
+      ordered.push(base);
+
+      function roleLabel(idx){ return (idx<2) ? "기능" : "베이스"; }
+
+      const list = ordered.map((o,idx)=>{
+        const tagText = o.tags.map(t=>TAG_LABEL[t]||t).join(" · ");
+        return `<li><b>${o.name}</b> <span class="pill">${o.cat}</span> <span class="pill">${roleLabel(idx)}</span><br><span class="tiny muted">${tagText}</span></li>`;
+      }).join("");
+
+      const ratioText = `권장 비율(총 5방울): ${ordered[0].name} 2 · ${ordered[1].name} 2 · ${ordered[2].name} 1`;
+
+      resultBox.innerHTML = `
+        <div class="resultTop">
+          <div class="pill">맞춤 3종 블렌딩</div>
+          <div class="pill">${ratioText}</div>
+        </div>
+        <div class="recipe">
+          <h3>오늘의 추천 레시피</h3>
+          <ol class="ol">${list}</ol>
+          <div class="reason">${reasons.join("<br>")}</div>
+        </div>
+        <div class="smallGrid">
+          <div class="kv"><b>사용 안내</b> 캐리어(호호바) 10ml 기준 1~2% 희석을 권장합니다. 민감피부는 더 낮게 시작해 주세요.</div>
+          <div class="kv"><b>매장 안내</b> 방문 시 테라피스트가 컨디션을 다시 확인하고 블렌딩을 미세 조절해드려요.</div>
+        </div>
+        <div class="disclaimer" style="margin-top:12px;">
+          <strong>참고</strong><br>
+          본 결과는 웰니스 목적의 향 추천입니다. 피부 반응이 있으면 즉시 중단하고, 임신/질환/약물 복용 중이면 전문가 상담이 필요합니다.
+        </div>
+      `;
+    }
+
+    function guardStep1(){
+      if(getSymptoms().length===0){
+        alert("STEP 1에서 최소 1개 이상 선택해 주세요.");
+        return false;
+      }
+      return true;
+    }
+
+    function next(){
+      if(currentStep===1){
+        if(!guardStep1()) return;
+        setStep(2); return;
+      }
+      if(currentStep===2){ setStep(3); return; }
+      if(currentStep===3){ setStep(4); return; }
+      if(currentStep===4){
+        const data = compute();
+        renderResult(data);
+        setStep(5);
+        return;
+      }
+    }
+    function back(){ if(currentStep>1) setStep(currentStep-1); }
+
+    // 이벤트 바인딩(안전)
+    $("nextBtn")?.addEventListener("click", next);
+    $("backBtn")?.addEventListener("click", back);
+
+    $("copyBtn")?.addEventListener("click", async ()=>{
+      const data = compute();
+      const picked = data.picked;
+
+      const base = [...picked].sort((a,b)=>{
+        const aB=(a.tags.includes("grounding")?2:0)+(a.tags.includes("sleep")?2:0)+(a.tags.includes("stress")?1:0);
+        const bB=(b.tags.includes("grounding")?2:0)+(b.tags.includes("sleep")?2:0)+(b.tags.includes("stress")?1:0);
+        return bB-aB;
+      })[0];
+
+      let ordered = picked.filter(o=>o.name!==base.name);
+      ordered.push(base);
+
+      const memo = ($("memo")?.value || "").trim() || "-";
+      const cond = (data.topNeeds.join(", ") || "-");
+      const like = (data.prefs.join(", ") || "-");
+      const dislike = (data.hates.join(", ") || "-");
+
+      const txt = [
+        "SPA BABYDUCK | 오늘의 3종 맞춤 블렌딩 결과",
+        `- 컨디션: ${cond}`,
+        `- 선호 향: ${like}`,
+        `- 비선호 향: ${dislike}`,
+        `- 추천 레시피(5방울): ${ordered[0].name} 2 / ${ordered[1].name} 2 / ${ordered[2].name} 1`,
+        `- 메모: ${memo}`,
+        "",
+        "이 내용을 그대로 보내주시면, 방문 시 컨디션에 맞게 블렌딩을 미세 조절해드려요."
+      ].join("\n");
+
+      try{
+        await navigator.clipboard.writeText(txt);
+        showToast("복사 완료. 메시지/메모에 붙여넣기 해주세요.");
+      }catch(e){
+        prompt("복사가 제한된 환경입니다. 아래 내용을 길게 눌러 복사해 주세요.", txt);
+      }
+    });
+
+    $("resetBtn")?.addEventListener("click", ()=>{
+      document.querySelectorAll('input[type="checkbox"]').forEach(i=>i.checked=false);
+      if($("intensity")) $("intensity").value = 3;
+      if($("memo")) $("memo").value = "";
+      excludedByName.clear();
+      document.querySelectorAll(".chip").forEach(c=>c.classList.remove("active"));
+      setStep(1);
+    });
+
+    // 시작
     setStep(1);
   });
-
-  setStep(1);
 })();
 </script>
 </body>
